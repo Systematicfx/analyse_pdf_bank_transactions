@@ -2,7 +2,7 @@
 
 ## Overview
 
-This app is designed to convert your PDF bank transactions, extracted from your bank website, into Excel (`.xls`) files. Currently, the app supports transactions from Axa, Crelan, and Fortis banks.
+This app is designed to convert your PDF bank transactions, extracted from your bank website, into Excel (`.xls`) files. Currently, the app supports transactions from Axa, Crelan, Belfius and Fortis banks.
 
 Additionally, the app extracts transaction details such as the "comment" and "counterparty" and automatically categorizes each transaction based on predefined dictionaries of categories. The categorization can be enriched with GPT for custom categories.
 
@@ -19,6 +19,7 @@ Let's be clear: the code is not polished or optimized. It was developed quickly 
 - Axa
 - Crelan
 - Fortis
+- Belfius
 
 ## Procedure
 
@@ -26,7 +27,7 @@ Let's be clear: the code is not polished or optimized. It was developed quickly 
 
 ### Summary of Instructions:
 1. **Edit the `.env`** file for the folder path where your PDFs are located.
-2. **Run the relevant script** for your bank (Axa, Crelan, or Fortis).
+2. **Run the relevant script** for your bank (Axa, Crelan, Belfius or Fortis).
 3. **Enrich categories** by extracting comments and using GPT for custom categorizations.
 4. **Update the script** with your new categories and re-run it to get categorized transactions.
 
@@ -42,6 +43,7 @@ Let's be clear: the code is not polished or optimized. It was developed quickly 
    - For Axa: `pdf_bank_transactions_axa.py`
    - For Crelan: `pdf_bank_transactions_crelan.py`
    - For Fortis: `pdf_bank_transactions_fortis.py`
+   - For Belfius: `pdf_bank_transactions_belfius.py`
 
    Example:
    ```bash
@@ -56,7 +58,7 @@ Copier le code
 
 ## Overview
 
-This app is designed to convert your PDF bank transactions, extracted from your bank website, into Excel (`.xls`) files. Currently, the app supports transactions from Axa, Crelan, and Fortis banks.
+This app is designed to convert your PDF bank transactions, extracted from your bank website, into Excel (`.xls`) files. Currently, the app supports transactions from Axa, Crelan, Belfius and Fortis banks.
 
 Additionally, the app extracts transaction details such as the "comment" and "counterparty" and automatically categorizes each transaction based on predefined dictionaries of categories. The categorization can be enriched with GPT for custom categories.
 
@@ -71,6 +73,7 @@ Additionally, the app extracts transaction details such as the "comment" and "co
 - Axa
 - Crelan
 - Fortis
+- Belfius
 
 ## Procedure
 
@@ -86,6 +89,7 @@ Additionally, the app extracts transaction details such as the "comment" and "co
    - For Axa: `pdf_bank_transactions_axa.py`
    - For Crelan: `pdf_bank_transactions_crelan.py`
    - For Fortis: `pdf_bank_transactions_fortis.py`
+   - For Fortis: `pdf_bank_transactions_belfius.py`
 
    Example:
    ```bash
