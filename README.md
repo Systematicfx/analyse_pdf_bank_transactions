@@ -137,3 +137,24 @@ Find the categorized transactions in the following files:
 - transactions_enriched_categorized.csv (all transactions)
 - transactions_enriched_categorized_pos_amounts.csv (positive amounts)
 - transactions_enriched_categorized_neg_amounts.csv (negative amounts)
+
+Few precisions about the fields in the xls.
+Fields related to your transactions:
+
+   - **date**: transaction date
+   - **trans_id**: transaction id
+   - **comment**: full transaction text
+   - **transaction type**: type of transaction
+   - **Communication**: communication extracted from your transaction text
+   - **Amount**: transaction amount
+   - **Counterparty**: transaction's counterparty
+     
+Additional fields:
+   - **exact keyword**: keyword found in category when exact match algo
+   - **regex exact keyword**: keyword found in category when exact match regex algo
+   - **fuzzy keyword**: keyword found in category when algo matching 
+   - **Categorized**: if transaction could be cotegorised
+   - **Category**: first category found
+   - **SubCategory**: next categories found
+
+

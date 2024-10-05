@@ -290,7 +290,7 @@ for pdf_file in pdf_folder.glob('*.pdf'):
     # Extract client information
     #client_name = re.search(r'M M ALLARD - ROLAND', text).group()
     #client_number = re.search(r'N° client : (\d+ \d+)', text).group(1)
-    iban = re.search(r'(BE\d{2} \d{4} \d{4} \d{4})', text).group(1)
+    iban = re.search(r'([A-Z]{2}\d{2}\s+\d{4}\s+\d{4}\s+\d{4})', text).group(1)
     bic = re.search(r'BIC (\w+)', text).group(1)
 
     # find current year

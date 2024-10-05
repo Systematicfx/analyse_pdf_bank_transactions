@@ -19,59 +19,79 @@ from datetime import datetime
 
 # Define function to extract transaction type
 def extract_transaction_type(comment):
-    if "Achat par carte" in comment:
+    if "BANCONTACT" in comment.upper():
         return "Achat par carte"
-    elif "contactless" in comment:
-        return "Achat par carte"
-    elif "eCommerce" in comment:
-        return "Achat par carte"
-    elif "charge crédits" in comment:
-        return "Prêts hypothécaire"
-    elif "Virement" in comment:
+    elif "VIREMENT" in comment.upper():
         return "Virement"
-    elif " Paiement instantané" in comment:
+    elif "VERSEMENT" in comment.upper():
         return "Virement"
-    elif ("Paiement" in comment) or (" Achat carburant Bancontact" in comment):
-        return "Achat par carte"
-    elif "ordre permanent" in comment:
-        return "ordre permanent"
-    elif "Versement" in comment:
+    elif "DOMICILIATION" in comment.upper():
         return "Virement"
-    elif "Mouvement" in comment:
-        return "Souscription de titres"
-    elif "Achat automatique" in comment:
-        return "Souscription de titres"
-    elif "Investissement" in comment:
-        return "Souscription de titres"
-    elif " Souscription épargne" in comment:
-        return "Souscription de titres"
-    elif "Retrait" in comment:
+    elif "CHARGEMENT DE LA CARTE" in comment.upper():
+        return "Virement"
+    elif "ORDRE PERMANENT" in comment.upper():
+        return "Virement"
+    elif "DEPOT" in comment.upper():
         return "Retrait d'espèces"
-    elif "Tenue de compte" in comment:
+    elif "RETRAIT" in comment.upper():
+        return "Retrait d'espèces"
+    elif "FRAIS DE" in comment:
         return "Redevance"
-    elif "Contribution compte à vue" in comment:
-        return "Redevance"
-    elif "Encaissement interne du crédit" in comment:
-        return "Prêts hypothécaire"
     else:
         return ""
 
 
 # Define function to extract communication
 def extract_communication(comment):
-    lines = comment.split('\n')
-    try:
-        return lines[1]
-    except:
-        return lines
+    # Define the regex pattern for ref bank
+    communication = r'COMMUNICATION\s:'
+    # Search for all ref bank patterns in the text
+    communication_matches = re.findall(communication, comment.upper())
+    # find text between communication and ref bank
+    if communication_matches:
+        # Get the firstmatch
+        match = communication_matches[0]
+        cut_text_after = comment[comment.index(match):]
+        # Remove the pattern 'COMMUNICATION:'
+        cut_text_after = re.sub(r'COMMUNICATION\s*:', '', cut_text_after)
 
+        ref = r'REFERENCE DU CREANCIER'
+        # Search for all ref bank patterns in the text
+        ref_matches = re.findall(ref, cut_text_after.upper())
+        if ref_matches:
+            # Get the firstmatch
+            match = ref_matches[0]
+            cut_text_before = cut_text_after[:cut_text_after.index(match)]
+            return cut_text_before
+        else:
+            return cut_text_after
 
-def process_transaction(row):
-    comment = row['comment']
-    transaction_type = row['transaction type']
-    lines = comment.split('\n')
-    if transaction_type == "Achat par carte":
-        return lines[1]
+    communication = r'VERSEMENT DE\s+[A-Z]{2}\d{2}\s+\d{4}\s+\d{4}\s+\d{4}\s+'
+    communication_matches = re.findall(communication, comment.upper())
+    # find text between communication and ref bank
+    if communication_matches:
+        # Regular expression to match text after 'Communication:' until the end of the line
+        pattern = r"VERSEMENT DE\s+[A-Z]{2}\d{2}\s+\d{4}\s+\d{4}\s+\d{4}\s\s*(.+)"
+        ref_matches = re.findall(pattern, comment.upper())
+        if ref_matches:
+            # Get the firstmatch
+            match = ref_matches[0]
+            cut_text_after = comment[comment.upper().index(match):]
+            lines = cut_text_after.split('\n')
+            return "{}: {}".format(lines[0], lines[1])
+        # Find the first match
+        #match = re.search(pattern, comment)
+        # If a match is found, print it
+        #if match:
+        #    return match.group(1)
+
+    communication = r'VIREMENT\s'
+    communication_matches = re.findall(communication, comment.upper())
+    # find text between communication and ref bank
+    if communication_matches:
+        lines = comment.split('\n')
+        return "{}: {}".format(lines[len(lines) - 2], lines[len(lines) - 1])
+    return ""
 
 
 # Define function to extract amount
@@ -92,10 +112,13 @@ def extract_amount(comment):
     #match_hundreds_amount = re.search(r'[+-]\d{1,3}(,\d{2})', match_hundreds).group(0)
     #match_thousands = re.search(r"[+-]?\d{1,3}(\.\d{3})*,\d{2}", comment).group(0)
     #match_thousands_amount = re.search(r'[+-]?\d{1,3}(\.\d{3})*,\d{2}', match_thousands).group(0)
-    match_millions = re.search(r'[+-]\d{1,3}(\.\d{3})*,\d{2}', comment)
+    match_millions = re.search(r"[+-]\s+\d{1,3}(\.\d{3})*,\d{2}", comment).group(0)
+    if match_millions is None:
+        match_millions = re.search(r"[+-]\d{1,3}(\.\d{3})*,\d{2}", comment).group(0)
+    match_millions = match_millions.replace(' ', '')
     #if throusand
     if match_millions is not None:
-        match_millions = match_millions.group(0)
+        # Remove spaces
         match_millions_amount = re.search(r'[+-]\d{1,3}(\.\d{3})*,\d{2}', match_millions).group(0).replace(".", "").replace(",", ".")
         sign = match_millions_amount[0:1]
         return f"-{match_millions_amount[1:]}" if sign == '-' else match_millions_amount[1:]
@@ -104,8 +127,42 @@ def extract_amount(comment):
 
 
 def extract_counterparty(comment):
+    bancontact_pattern = r'BANCONTACT ACHAT'
+    # Search for all patterns in the text
+    bancontact_matches = re.findall(bancontact_pattern, comment.upper())
+    if bancontact_matches:
+        # Search for all ref bank patterns in the text
+        bancontact_matches = re.findall(bancontact_pattern, comment.upper())
+        # find text between communication and ref bank
+        if bancontact_matches:
+            # Regular expression to match text after 'Communication:' until the end of the line
+            pattern = r"BANCONTACT ACHAT\s*(.+)"
+            # Find the first match
+            match = re.search(pattern, comment)
+            # If a match is found, print it
+            if match:
+                line = match.group(1).replace('\n', '')
+                line = line.lstrip(' -')
+                return re.sub(r'\s{2,}', ' ', line)
     # Define the regex pattern
-    iban_pattern = r'Vers\s'
+    iban_pattern = r'\sVERS\s'
+    # Search for all patterns in the text
+    iban_matches = re.findall(iban_pattern, comment)
+
+    if iban_matches:
+        # Get the firstmatch
+        iban_match = iban_matches[0]
+        # Cut the text from the first pattern onwards, including the pattern itself
+        cut_text_after_iban = comment[comment.index(iban_match):]
+        # Remove the pattern from the text
+        pattern = r'\sVERS\s[A-Z]{2}\d{2}\s+\d{4}\s+\d{4}\s+\d{4}'
+        cut_text_after_iban = re.sub(pattern, '', cut_text_after_iban)
+        line = cut_text_after_iban.replace('\n', '')
+        line = line.lstrip(' -')
+        return re.sub(r'\s{2,}', ' ', line)
+
+    # Define the regex pattern
+    iban_pattern = r'\sAU NOM DE\s'
     # Search for all patterns in the text
     iban_matches = re.findall(iban_pattern, comment)
     if iban_matches:
@@ -113,27 +170,14 @@ def extract_counterparty(comment):
         iban_match = iban_matches[0]
         # Cut the text from the first pattern onwards, including the pattern itself
         cut_text_after_iban = comment[comment.index(iban_match):]
-        #print(f"Last IBAN match found: {iban_match}")
-        #print(f"Text after last IBAN match: {cut_text_after_iban}")
+        # Remove the pattern from the text
+        pattern = r'\sAU NOM DE\s'
+        cut_text_after_iban = re.sub(pattern, '', cut_text_after_iban)
+        line = cut_text_after_iban.replace('\n', '')
+        line = line.lstrip(' -')
+        return re.sub(r'\s{2,}', ' ', line)
 
-        return cut_text_after_iban
-    else:
-        # Define the regex pattern for ref bank
-        ref_bank_pattern = r'carte\sn°\s'
-
-        # Search for all ref bank patterns in the text
-        ref_bank_matches = re.findall(ref_bank_pattern, comment)
-        if ref_bank_matches:
-            # Get the first ref bank match
-            ref_bank_match = ref_bank_matches[0]
-            # Find the end index of the last IBAN match
-            #ref_bank_end_index = comment.index(ref_bank_match) + len(ref_bank_match)
-            # Cut the text from the end of the last IBAN pattern onwards (not including the IBAN itself)
-            cut_text_after_iban = comment[comment.index(ref_bank_match):]
-            #cut_text_after_ref_bank = comment[ref_bank_match:].strip()
-            return cut_text_after_iban
-        #print("No patterns found in the text.")
-        return ""
+    return ""
 
     '''
     # Define the regex patterns
@@ -190,7 +234,8 @@ def extract_counterparty(comment):
 def remove_headers_footers(text):
     # Define the transaction pattern
     #transaction_pattern = r'(\d{2}-\d{2}-\d{4})\s+(\d{4})\s+'
-    transaction_pattern = r'\b\d+\s\d{2}/\d{2}\b'
+
+    transaction_pattern = r'SOLDE AU\s*\d{2}-\d{2}-\d{4}'
     # Search for the first occurrence of the transaction pattern
     match = re.search(transaction_pattern, text)
 
@@ -206,63 +251,86 @@ def remove_headers_footers(text):
         remaining_text = text[match.start():]
     else:
         remaining_text = text
-    # remove other headers
-    #start_header = re.search(r"Nouveau solde au\s+", remaining_text).group(0)
-    #end_header = header_text[-26:]
-    # Constructing the regular expression dynamically
-    try:
-        pattern = re.escape("Nouveau solde au") + r".*?" + re.escape("Mouvement Valeur Montant")
+
+    # remove sub-headers
+    transaction_pattern = r'\d+\s+\d{2}-\d{2}-\d{4}'
+    # Search for the first occurrence of the transaction pattern
+    match = re.search(transaction_pattern, remaining_text)
+    if match:
+        # Keep text from the match onward
+        remaining_text = remaining_text[match.start():]
+
+        # remove other headers
+        start_header = 'Belfius Banque'
+        end_header = re.search(r'----\s+[A-Z]{2}\d{2}\s+\d{4}\s+\d{4}\s+\d{4}\s+-----', remaining_text).group(0)
+        # Constructing the regular expression dynamically
+        pattern = re.escape(start_header) + r".*?" + re.escape(end_header)
         # Using re.sub to remove everything from start_header to end_header
         remaining_text = re.sub(pattern, '\n', remaining_text, flags=re.DOTALL)
-    except:
-        print("no sub header")
-    # remove pdf date
-    #remaining_text = remaining_text.replace(matched_date, "").strip()
 
-    # find balances
-    #match_beginning_footer = re.search(r'Solde actuel [+-]\d{1,3}(\.\d{3})*,\d{2}', remaining_text)
-    #if match_beginning_footer:
-        # remove header info
-        #footer_text = remaining_text[match_beginning_footer.end():].strip()
+        remaining_text = re.sub(r'-{3,}', '', remaining_text)
+
+        # find balances
+        #match_beginning_footer = re.search(r'Solde actuel [+-]\d{1,3}(\.\d{3})*,\d{2}', remaining_text)
+        #if match_beginning_footer:
+            # remove header info
+            #footer_text = remaining_text[match_beginning_footer.end():].strip()
 
     # remove footer
-    #remaining_text = re.sub(r"Les sommes déposées sur le présent compte sont éligibles dans le cadre du système de "
-    #                           r"protection des dépôts. Voyez la fiche d'information sur la protection des dépôts.", '', remaining_text)
+    transaction_pattern = r'SOLDE AU\s*\d{2}-\d{2}-\d{4}'
+    # Search for the first occurrence of the transaction pattern
+    match = re.search(transaction_pattern, remaining_text)
 
-    try:
-        remaining_text = re.sub(r"Les sommes déposées.*", '', remaining_text, flags=re.DOTALL)
-    except:
-        print("error: footer couldn't be removed")
+    if match:
+        # remove header info
+        remaining_text = remaining_text[:match.start()]
+    else:
+        try:
+            transaction_pattern = r'Belfius Banque'
+            # Search for the first occurrence of the transaction pattern
+            match = re.search(transaction_pattern, remaining_text)
+
+            if match:
+                # remove header info
+                remaining_text = remaining_text[:match.start()]
+        except:
+            print("error: couldn't remove footer")
+
 
     return remaining_text
 
 
 def split_transactions(remaining_text):
     final_list = []
-    pattern = r'\b\d+\s\d{2}/\d{2}\b'
+    # Define the regex pattern
+    pattern = r'(\d+\s+\d{2}-\d{2}-\d{4})'
 
-    # Split the text using the updated pattern
-    splitted_text = re.split(pattern, remaining_text)
-    # Print each part after splitting
-    for idx, part in enumerate(splitted_text, 1):
-        final_list.append(f"{idx}: {part.strip()}\n")
-        print(f"{idx}: {part.strip()}\n")
+    # Use re.split() with the pattern in parentheses to keep the delimiter
+    result = re.split(pattern, remaining_text)
+
+    # Remove any empty strings from the list (optional)
+    result = [item for item in result if item.strip()]
+    # Iterate over the list, taking even and odd index pairs
+    concatenated_list = []
+    for i in range(0, len(result), 2):
+        # Concatenate the current even-indexed string with the following odd-indexed string
+        concatenated_string = result[i] + " " + result[i + 1]
+        concatenated_list.append(concatenated_string)
 
     # Remove empty strings and print the results
-    return [transaction.strip() for transaction in final_list if transaction.strip()]
+    return [transaction.strip() for transaction in concatenated_list if transaction.strip()]
 
 
 # Load the .env file
 load_dotenv()
 # Access the PDF_FILES_PATH variable
 input_folder_path = os.getenv('PDF_FILES_PATH')
+input_folder_path = input_folder_path.replace('\\', '/')
 language = os.getenv('LANGUAGE')
 if language != "French":
     print('Warning: nltk packages are in French. It can be easily changed though, lookup and change parameter "language=french"')
 #input_folder_path = 'E:/LaptopBackUp/Administrative/Banques/Fortis/Commun/2024/test/'
-#input_folder_path = 'D:/LaptopBackUp/Administrative/Banques/Axa/BE10 7506 7495 9104/Crelan/2024'
-
-#reader = PdfReader(pdf_path)
+#input_folder_path = 'D:/LaptopBackUp/Administrative/Banques/Axa/BE10 7506 7495 9104/extraits/2024'
 
 pdf_folder = Path(input_folder_path)
 transaction_id = 0
@@ -305,72 +373,58 @@ for pdf_file in pdf_folder.glob('*.pdf'):
     #client_name = re.search(r'M M ALLARD - ROLAND', text).group()
     #client_number = re.search(r'N° client : (\d+ \d+)', text).group(1)
     iban = re.search(r'([A-Z]{2}\d{2}\s+\d{4}\s+\d{4}\s+\d{4})', text).group(1)
-    bic = re.search(r'BIC: (\w+)', text).group(1)
+    bic = re.search(r'BIC:\s(\w+)', text).group(1)
 
-    # find current year
-    # Regex pattern to match the year
-    pattern = r'Extrait:\s*\d{1,2}/(\d{4})'
-    # Find the first match
-    match = re.search(pattern, text)
-    # Extract the year if a match is found
-    if match:
-        current_year = match.group(1)
-    else:
-        # Regex pattern to match the year
-        pattern = r'Nouveau\s+solde\s+au\s+\d{1,2}/\d{1,2}/(\d{4})'
-        # Find the first match
-        match = re.search(pattern, text)
-        # Extract the year if a match is found
-        if match:
-            current_year = match.group(1)
+    # Define the regex pattern
+    pattern = r'SOLDE AU\s*\d{2}-\d{2}-\d{4}'
+    # Search for all patterns in the text
+    matches = re.findall(pattern, text)
+
+    if matches:
+        # Get the firstmatch
+        iban_match = matches[-1]
+        # Cut the text from the first pattern onwards, including the pattern itself
+        cut_text = text[text.index(iban_match):]
+        # find current year
+        pattern_year = r'SOLDE AU\s*\d{2}-\d{2}-\d{4}'
+        match_year = re.search(pattern_year, text)
+        if match_year:
+            current_year = match_year.group(0)
+            current_year = current_year[-4:]
         else:
-            current_year = "9999"
-
-    # Extract current and previous balance
-    # Define the pattern
-    pattern = r'Solde\s+précédent\s+au\s+\d{1,2}/\d{1,2}/(\d{4})'
-    # Find the first matching line and store it in a variable
-    matching_line = next((line for line in text.splitlines() if re.search(pattern, line)), None)
-    # get date
-    date_pattern = r'\d{1,2}/\d{1,2}/(\d{4})'
-    # Find the first match
-    old_balance_date = re.search(date_pattern, matching_line).group(0)
-    # Extract the year if a match is found
-    if match:
-        current_year = match.group(1)
-
-    match_millions = re.search(r"-?\s?\d{1,3}(\.\d{3})*,\d{2}", matching_line).group(0)
-    if match_millions is not None:
-        match_millions_amount = re.search(r'-?\s?\d{1,3}(\.\d{3})*,\d{2}', match_millions).group(0).replace(".",
-                                                                                                            "").replace(
-            ",", ".")
-        sign = match_millions_amount[0:1]
-        previous_balance_amount = f"-{match_millions_amount[1:]}" if sign == '-' else match_millions_amount[1:]
-
-    # Extract current and previous balance
-    # Define the pattern
-    pattern = r'Nouveau\s+solde\s+au\s+\d{1,2}/\d{1,2}/(\d{4})'
-    # Find the first matching line and store it in a variable
-    matching_line = next((line for line in text.splitlines() if re.search(pattern, line)), None)
-    # get date
-    date_pattern = r'\d{1,2}/\d{1,2}/(\d{4})'
-    # Find the first match
-    current_balance_date = re.search(date_pattern, matching_line).group(0)
-    match_millions = re.search(r"-?\s?\d{1,3}(\.\d{3})*,\d{2}", matching_line).group(0)
-    if match_millions is not None:
-        match_millions_amount = re.search(r'-?\s?\d{1,3}(\.\d{3})*,\d{2}', match_millions).group(0).replace(".", "").replace(",", ".")
-        sign = match_millions_amount[0:1]
-        current_balance_amount = f"-{match_millions_amount[1:]}" if sign == '-' else match_millions_amount[1:]
-
-    # keep track of account balance
-    if current_balance_date not in dic_balances:
-        dic_balances[current_balance_date] = current_balance_amount
+            current_year = '9999'
     else:
-        print('test')
-    if old_balance_date not in dic_balances:
-        dic_balances[old_balance_date] = previous_balance_amount
+        current_year = '9999'
+    '''
+    # Extract current and previous balance
+    match_date = re.search(r"Date\s*:\s*\d{2}-\d{2}-\d{4}", text)
+    if match_date:
+        matched_date = match_date.group()
+        current_balance_date = re.search(r'\s*:\s*\d{2}-\d{2}-\d{4}', matched_date).group(0)
     else:
-        print('test')
+        current_balance_date = "Unknown"
+
+    try:
+        current_balance = re.search(r'Solde actuel [+-]\d{1,3}(\.\d{3})*,\d{2}', text).group(0)
+        current_balance_amount = re.search(r'[+-]?\d{1,3}(\.\d{3})*,\d{2}', current_balance).group(0)
+    except:
+        try:
+            current_balance = re.search(r'Solde actuel [+-]\d{1,3}(,\d{2})', text).group(0)
+            current_balance_amount = re.search(r'[+-]\d{1,3}(,\d{2})', current_balance).group(0)
+        except:
+            current_balance = re.search(r'Solde actuel [+-]\d{1,3}(\.\d{3})*,\d{2}', text).group(0)
+            current_balance_amount = re.search(r'[+-]\d{1,3}(\.\d{3})*,\d{2}', current_balance).group(0)
+    try:
+        previous_balance = re.search(r'Solde précédent [+-]\d{1,3}(\.\d{3})*,\d{2}', text).group(0)
+        previous_balance_amount = re.search(r'[+-]\d{1,3}(\.\d{3})*,\d{2}', previous_balance).group(0)
+    except:
+        try:
+            previous_balance = re.search(r'Solde précédent [+-]\d{1,3}(,\d{2})', text).group(0)
+            previous_balance_amount = re.search(r'[+-]\d{1,3}(,\d{2})', previous_balance).group(0)
+        except:
+            previous_balance = re.search(r'Solde précédent [+-]\d{1,3}(\.\d{3})*,\d{2}', text).group(0)
+            previous_balance_amount = re.search(r'[+-]\d{1,3}(\.\d{3})*,\d{2}', previous_balance).group(0)
+    '''
 
     ## remove headers and footer
     remaining_text = remove_headers_footers(text)
@@ -391,35 +445,40 @@ for pdf_file in pdf_folder.glob('*.pdf'):
 # convert transaction list to df
 transaction_df = pd.DataFrame(columns=['date', 'trans_id', 'comment'])
 for i, el in enumerate(final_transaction_list):
-    if len(el) > 4:
-        transaction_id += 1
-        ## Find date in the format "dd-mm"
-        # Search for the first occurrence of any date pattern
-        #dates = re.findall(r'\b\d{2}/\d{2}\b', el)
-        try:
-            matched_date = re.search(r'\b\d{2}/\d{2}\b', el).group()
-        except:
-            try:
-                matched_date = re.search(r'\d{2}-\d{2}', el).group()
-            except:
-                matched_date = '01/01'
-        # get year: Convert the string to a datetime object and extract the year
-        #date_year = datetime.strptime(current_balance_date, "%d-%m-%Y").year
+    #transaction_id += 1
+    ## Find date in the format "dd-mm"
+    pattern = r"\b\d{2}-\d{2}\b"
+    # Search for the first occurrence of any date pattern
+    try:
+        matched_date = re.search(pattern, el).group()
+    except:
+        matched_date = re.search(r"\d{2}-\d{2}", el).group()
 
-        transaction_date = "{}/{}".format(matched_date, str(current_year))
-        transaction_df = pd.concat([transaction_df,
-                                       pd.DataFrame([{'date': transaction_date,
-                                                      'trans_id': transaction_id,
-                                                      'comment': el}])],
-                                      ignore_index=True)
+    # remove sub-headers
+    transaction_pattern = r'\d+\s+\d{2}-\d{2}-\d{4}'
+    # Search for the first occurrence of the transaction pattern
+    match = re.search(transaction_pattern, el)
+    if match:
+        transaction_id = match.group()[0:4]
+    else:
+        transaction_id = i + 1
+    # get year: Convert the string to a datetime object and extract the year
+    #date_year = datetime.strptime(current_balance_date, "%d-%m-%Y").year
+
+    transaction_date = "{}-{}".format(matched_date, str(current_year))
+    transaction_df = pd.concat([transaction_df,
+                                   pd.DataFrame([{'date': transaction_date,
+                                                  'trans_id': transaction_id,
+                                                  'comment': el}])],
+                                  ignore_index=True)
 
 # Convert 'date' column to datetime format
-transaction_df['date'] = pd.to_datetime(transaction_df['date'], format='%d/%m/%Y')
+transaction_df['date'] = pd.to_datetime(transaction_df['date'], format='%d-%m-%Y')
 # Sort the DataFrame by 'date' in ascending order
 transaction_df = transaction_df.sort_values(by='date')
 # Reset the index if desired
 transaction_df.reset_index(drop=True, inplace=True)
-transaction_df['trans_id'] = transaction_df.index
+#transaction_df['trans_id'] = transaction_df.index
 
 #errors_output_file = os.path.join(input_folder_path, 'error_transaction.csv')
 #try:
@@ -446,7 +505,6 @@ except:
 # Apply the extraction functions to create the new columns
 transaction_df['transaction type'] = transaction_df['comment'].apply(extract_transaction_type)
 transaction_df['Communication'] = transaction_df['comment'].apply(extract_communication)
-#transaction_df['Communication'] = transaction_df.apply(process_transaction, axis=1)
 transaction_df['Amount'] = transaction_df['comment'].apply(extract_amount)
 transaction_df['Counterparty'] = transaction_df['comment'].apply(extract_counterparty)
 #transaction_df['Counterparty'] = ""
