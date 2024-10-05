@@ -118,11 +118,20 @@ Additionally, the app extracts transaction details such as the "comment" and "co
 
 ### C) Run the Script and Get Results
 
-1. **Re-run the script**:
+1. **Enrich the matching dictionary**:
 
-- After enriching your categories, run the script again.
+- In the `script matching_algos.py`, enrich your categories from GPT in the dictionaries:
+  - 1) `categories_exact_match`: will try to find exact matches from keywords of each category to categorize the transactions
+  - 2) `categories_belgium` and `categories_france`: will use matching algorithms to match keywords of each category to categorize the transactions
+- Be aware, the matching goes through all categories of the dic so that less important categories must be located at the beginning
+of the dictionary and the most important as last keys of the dic.
 
-2. **Locate the results**:
+2. **Re-run the script**:
+
+- After enriching your categories in the dic, run the script again.
+- You can reproduce the process several times to refine you dictionaries
+
+3. **Locate the results**:
 
 Find the categorized transactions in the following files:
 - transactions_enriched_categorized.csv (all transactions)
