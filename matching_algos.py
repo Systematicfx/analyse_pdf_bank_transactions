@@ -180,6 +180,7 @@ def get_categories():
             ]
         }
 
+
     categories_exact_match = {
             'Groceries': [
                 "AD DELHAIZE FORE VORST",
@@ -288,7 +289,7 @@ def get_categories():
                 "Auctelia",
                 "Kordo"
             ],
-            'Firstname Lastname': [
+            'Lastname Firstname': [
                 "Lastname Firstname",
                 "Firstname Lastname",
                 "Services Taxes - Please des Carmes",
@@ -514,6 +515,10 @@ def categorize_transaction(transaction_df, categories_exact_match, categories_fu
     transaction_df['Categorized'] = False
     transaction_df['Category'] = "Unknown"
     transaction_df['SubCategory'] = "Unknown"
+
+    transaction_df['exact keyword'] = ""
+    transaction_df['regex exact keyword'] = ""
+    transaction_df['fuzzy keyword'] = ""
 
     #communication = row['Communication'].upper()
     #comment = row['comment'].upper()

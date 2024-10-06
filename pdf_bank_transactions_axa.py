@@ -121,57 +121,6 @@ def extract_counterparty(comment):
 
     return ""
 
-    '''
-    # Define the regex patterns
-    iban_pattern = r'BE\d{2}\s\d{4}\s\d{4}\s\d{4}\s{1,2}[A-Z]{3}'
-    date_pattern = r'\d{2}-\d{2}'
-
-    comment = """Virement en euros via Easy Banking Web 
-    Date d'exécution : 30-06-2024
-    Communication : 931/3687/38570
-    Référence banque : 2406301710212344BE76 3350 5545 9895  EUR
-    BBRUBEBB 01-07
-    Référence banque : 2406301710212344BE76 8750 5596 9295  USD
-    EDF Luminus SA01-07 10,00 -"""
-
-    # Find all matches of the IBAN pattern in the text
-    iban_matches = re.findall(iban_pattern, comment)
-    #num_matches = len(iban_matches)
-    last_match = iban_matches[-1]
-    # Find the IBAN-like match
-    iban_match = re.search(last_match, comment)
-
-    # Check if an IBAN match is found
-    if iban_match:
-        # Get the matched IBAN
-        iban_value = iban_match.group()
-
-        # Get the start index of the IBAN match
-        start_index = iban_match.end()
-
-        # Search for the date pattern after the IBAN match
-        # Find all matches of the IBAN pattern in the text
-        date_matches = re.findall(date_pattern, comment[start_index:])
-        num_date_matches = len(date_matches)
-        last_date_match = date_matches[-1]
-        # Find the IBAN-like match
-        date_match = re.search(last_date_match, comment[start_index:])
-
-        #date_match = re.search(date_pattern, comment[start_index:])
-
-        if date_match:
-            # Extract the text between the IBAN and the date
-            text_between = comment[start_index:start_index + date_match.start()].strip()
-            # Combine the IBAN and the text
-            result = f"{iban_value} {text_between}"
-            return result
-        else:
-            return comment[iban_match.start():]
-    else:
-        return ""
-
-    '''
-
 
 def remove_headers_footers(text):
     # Define the transaction pattern
@@ -201,12 +150,6 @@ def remove_headers_footers(text):
 
         # remove pdf date
         remaining_text = remaining_text.replace(matched_date, "").strip()
-
-        # find balances
-        #match_beginning_footer = re.search(r'Solde actuel [+-]\d{1,3}(\.\d{3})*,\d{2}', remaining_text)
-        #if match_beginning_footer:
-            # remove header info
-            #footer_text = remaining_text[match_beginning_footer.end():].strip()
 
         # remove footer
         # Try to find "Solde actuel" first
@@ -247,33 +190,20 @@ input_folder_path = input_folder_path.replace('\\', '/')
 language = os.getenv('LANGUAGE')
 if language != "French":
     print('Warning: nltk packages are in French. It can be easily changed though, lookup and change parameter "language=french"')
-#input_folder_path = 'E:/LaptopBackUp/Administrative/Banques/Fortis/Commun/2024/test/'
-#input_folder_path = 'D:/LaptopBackUp/Administrative/Banques/Axa/BE10 7506 7495 9104/extraits/2024'
 
 pdf_folder = Path(input_folder_path)
 transaction_id = 0
 final_transaction_list = []
-#error_transaction = pd.DataFrame(columns=['date', 'trans_id', 'comment'])
 error_amount = pd.DataFrame(columns=['comment', 'amount'])
 dic_balances = {}
 # Loop through all PDFs in the folder
 for pdf_file in pdf_folder.glob('*.pdf'):
     # Open and process each PDF
     print(f'Processing file: {pdf_file}')
-
     # Create a PdfReader object
     reader = PdfReader(pdf_file)
-
     # Extracting information (for example, the number of pages)
     num_pages = len(reader.pages)
-    #print(f'Number of pages in {pdf_file.name}: {num_pages}')
-
-    # Example: Extract text from all pages
-    #for page_num in range(num_pages):
-    #    page = reader.pages[page_num]
-    #    text = page.extract_text()
-    #    print(f'Text from page {page_num + 1} of {pdf_file.name}:\n{text}\n')
-
 
     # Extract text
     pdf_text = ''
@@ -283,15 +213,13 @@ for pdf_file in pdf_folder.glob('*.pdf'):
         else:
             pdf_text += page.extract_text()
 
-    # Checking extracted text to find transaction pattern
-    #pdf_text[:1000]
-
     text = pdf_text
     # Extract client information
-    #client_name = re.search(r'M M ALLARD - ROLAND', text).group()
-    #client_number = re.search(r'N° client : (\d+ \d+)', text).group(1)
-    iban = re.search(r'([A-Z]{2}\d{2}\s+\d{4}\s+\d{4}\s+\d{4})', text).group(1)
-    bic = re.search(r'BIC (\w+)', text).group(1)
+    try:
+        iban = re.search(r'([A-Z]{2}\d{2}\s+\d{4}\s+\d{4}\s+\d{4})', text).group(1)
+        bic = re.search(r'BIC (\w+)', text).group(1)
+    except:
+        print("Couldn't retrieve IBAN and BIC")
 
     # find current year
     pattern_year = r"Extrait de compte \d{4}"
@@ -300,53 +228,39 @@ for pdf_file in pdf_folder.glob('*.pdf'):
         current_year = match_year.group(0)
         current_year = current_year[-4:]
     # Extract current and previous balance
-    match_date = re.search(r"Date\s*:\s*\d{2}-\d{2}-\d{4}", text)
-    if match_date:
-        matched_date = match_date.group()
-        current_balance_date = re.search(r'\s*:\s*\d{2}-\d{2}-\d{4}', matched_date).group(0)
-    else:
-        current_balance_date = "Unknown"
+    try:
+        match_date = re.search(r"Date\s*:\s*\d{2}-\d{2}-\d{4}", text)
+        if match_date:
+            matched_date = match_date.group()
+            current_balance_date = re.search(r'\s*:\s*\d{2}-\d{2}-\d{4}', matched_date).group(0)
+        else:
+            current_balance_date = "Unknown"
 
-    try:
-        current_balance = re.search(r'Solde actuel [+-]\d{1,3}(\.\d{3})*,\d{2}', text).group(0)
-        current_balance_amount = re.search(r'[+-]?\d{1,3}(\.\d{3})*,\d{2}', current_balance).group(0)
-    except:
         try:
-            current_balance = re.search(r'Solde actuel [+-]\d{1,3}(,\d{2})', text).group(0)
-            current_balance_amount = re.search(r'[+-]\d{1,3}(,\d{2})', current_balance).group(0)
-        except:
             current_balance = re.search(r'Solde actuel [+-]\d{1,3}(\.\d{3})*,\d{2}', text).group(0)
-            current_balance_amount = re.search(r'[+-]\d{1,3}(\.\d{3})*,\d{2}', current_balance).group(0)
-    try:
-        previous_balance = re.search(r'Solde précédent [+-]\d{1,3}(\.\d{3})*,\d{2}', text).group(0)
-        previous_balance_amount = re.search(r'[+-]\d{1,3}(\.\d{3})*,\d{2}', previous_balance).group(0)
-    except:
-        try:
-            previous_balance = re.search(r'Solde précédent [+-]\d{1,3}(,\d{2})', text).group(0)
-            previous_balance_amount = re.search(r'[+-]\d{1,3}(,\d{2})', previous_balance).group(0)
+            current_balance_amount = re.search(r'[+-]?\d{1,3}(\.\d{3})*,\d{2}', current_balance).group(0)
         except:
+            try:
+                current_balance = re.search(r'Solde actuel [+-]\d{1,3}(,\d{2})', text).group(0)
+                current_balance_amount = re.search(r'[+-]\d{1,3}(,\d{2})', current_balance).group(0)
+            except:
+                current_balance = re.search(r'Solde actuel [+-]\d{1,3}(\.\d{3})*,\d{2}', text).group(0)
+                current_balance_amount = re.search(r'[+-]\d{1,3}(\.\d{3})*,\d{2}', current_balance).group(0)
+        try:
             previous_balance = re.search(r'Solde précédent [+-]\d{1,3}(\.\d{3})*,\d{2}', text).group(0)
             previous_balance_amount = re.search(r'[+-]\d{1,3}(\.\d{3})*,\d{2}', previous_balance).group(0)
-
-
-    # keep track of account balance
-    #if current_balance_date not in dic_balances:
-    #    dic_balances[current_balance_date] = current_balance_amount
-    #else:
-    #    print('test')
+        except:
+            try:
+                previous_balance = re.search(r'Solde précédent [+-]\d{1,3}(,\d{2})', text).group(0)
+                previous_balance_amount = re.search(r'[+-]\d{1,3}(,\d{2})', previous_balance).group(0)
+            except:
+                previous_balance = re.search(r'Solde précédent [+-]\d{1,3}(\.\d{3})*,\d{2}', text).group(0)
+                previous_balance_amount = re.search(r'[+-]\d{1,3}(\.\d{3})*,\d{2}', previous_balance).group(0)
+    except:
+        print("Couldn't retrieve account balance info")
 
     ## remove headers and footer
     remaining_text = remove_headers_footers(text)
-
-    # Loop through each ignored sentences and remove it from the remaining text
-    #for line in custom_text_remove:
-    #    remaining_text = remaining_text.replace(line, "").strip()
-
-    # Define the regex pattern to remove
-    #regex_pattern = [r'Tél\. 02 762 20 00 - Card Stop: 078 170 170 - www\.bnpparibasfortis\.be\d+/\d+',
-    #           r"Tél\. \d{2} \d{3} \d{2} \d{2} - Card Stop: \d{3} \d{3} \d{3} - www\.bnpparibasfortis\.be\d+/\d+"]
-    #for pattern in regex_pattern:
-    #    remaining_text = re.sub(pattern, '', remaining_text)
 
     # split transactions
     final_transaction_list.extend(split_transactions(remaining_text))
@@ -380,16 +294,6 @@ transaction_df = transaction_df.sort_values(by='date')
 transaction_df.reset_index(drop=True, inplace=True)
 transaction_df['trans_id'] = transaction_df.index
 
-#errors_output_file = os.path.join(input_folder_path, 'error_transaction.csv')
-#try:
-#    error_transaction.to_csv(
-#        errors_output_file,
-#        index=False,
-#        sep=',',
-#        encoding='utf-8-sig',
-#    )
-#except:
-#    print("error permmission denied: 'error_transaction.csv' seems to be already open, please close the file")
 transaction_output_file = os.path.join(input_folder_path, 'transactions.csv')
 try:
     transaction_df.to_csv(
@@ -407,15 +311,6 @@ transaction_df['transaction type'] = transaction_df['comment'].apply(extract_tra
 transaction_df['Communication'] = transaction_df['comment'].apply(extract_communication)
 transaction_df['Amount'] = transaction_df['comment'].apply(extract_amount)
 transaction_df['Counterparty'] = transaction_df['comment'].apply(extract_counterparty)
-#transaction_df['Counterparty'] = ""
-'''
-# Convert 'date' column to datetime format
-transaction_df['date'] = pd.to_datetime(transaction_df['date'], format='%d-%m-%Y')
-# Sort the DataFrame by 'date' in ascending order
-transaction_df = transaction_df.sort_values(by='date')
-# Reset the index if desired
-transaction_df.reset_index(drop=True, inplace=True)
-'''
 
 # Display or save the result
 # os.path.join(os.path.dirname(pdf_path)
@@ -423,11 +318,13 @@ output_file_path = os.path.join(input_folder_path, 'transactions_enriched.csv')
 transaction_df.to_csv(output_file_path, index=False)
 if transaction_df.empty:
     print("No transaction found")
+
+# Export the 'comments' column to a text file
+transaction_df['comment'].to_csv(os.path.join(input_folder_path, 'comments_GPT.txt'), index=False, header=False)
+
 # Apply the categorization function to the DataFrame
 categories_exact_match, categories_fuzzy = get_categories()
-transaction_df['exact keyword'] = ""
-transaction_df['regex exact keyword'] = ""
-transaction_df['fuzzy keyword'] = ""
+
 transaction_df = categorize_transaction(transaction_df, categories_exact_match=categories_exact_match, categories_fuzzy=categories_fuzzy)
 
 output_file_path = os.path.join(input_folder_path, 'transactions_enriched_categorized.csv')

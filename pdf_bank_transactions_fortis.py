@@ -154,8 +154,6 @@ def extract_counterparty(comment):
         iban_match = iban_matches[-1]
         # Cut the text from the last IBAN pattern onwards, including the pattern itself
         cut_text_after_iban = comment[comment.index(iban_match):]
-        #print(f"Last IBAN match found: {iban_match}")
-        #print(f"Text after last IBAN match: {cut_text_after_iban}")
 
         # Now find all date patterns in the remaining text
         date_pattern = r'\d{2}-\d{2}'
@@ -166,8 +164,6 @@ def extract_counterparty(comment):
             last_date_match = all_date_matches[-1]
             # Cut the text from the last date pattern onwards, including the pattern itself
             cut_text_after_date = cut_text_after_iban[:cut_text_after_iban.index(last_date_match)]
-            #print(f"Last date pattern found: {last_date_match}")
-            #print(f"Text after last date match: {cut_text_after_date}")
             return cut_text_after_date
         else:
             #print("No date patterns found in the text after the last IBAN.")
@@ -188,71 +184,16 @@ def extract_counterparty(comment):
             # Now find all date patterns in the remaining text
             date_pattern = r'\d{2}-\d{2}'
             all_date_matches = re.findall(date_pattern, cut_text_after_ref_bank)
-
             if all_date_matches:
                 # Get the last date match
                 last_date_match = all_date_matches[-1]
                 # Cut the text from the last date pattern onwards, including the pattern itself
                 cut_text_after_date = cut_text_after_ref_bank[:cut_text_after_ref_bank.index(last_date_match)]
-                #print(f"Last date pattern found: {last_date_match}")
-                #print(f"Text after last date match: {cut_text_after_date}")
                 return cut_text_after_date
             else:
-                #print("No date patterns found in the text after the last IBAN.")
                 return cut_text_after_ref_bank
         #print("No patterns found in the text.")
         return ""
-
-    '''
-    # Define the regex patterns
-    iban_pattern = r'BE\d{2}\s\d{4}\s\d{4}\s\d{4}\s{1,2}[A-Z]{3}'
-    date_pattern = r'\d{2}-\d{2}'
-
-    comment = """Virement en euros via Easy Banking Web 
-    Date d'exécution : 30-06-2024
-    Communication : 931/3687/38570
-    Référence banque : 2406301710212344BE76 3350 5545 9895  EUR
-    BBRUBEBB 01-07
-    Référence banque : 2406301710212344BE76 8750 5596 9295  USD
-    EDF Luminus SA01-07 10,00 -"""
-
-    # Find all matches of the IBAN pattern in the text
-    iban_matches = re.findall(iban_pattern, comment)
-    #num_matches = len(iban_matches)
-    last_match = iban_matches[-1]
-    # Find the IBAN-like match
-    iban_match = re.search(last_match, comment)
-
-    # Check if an IBAN match is found
-    if iban_match:
-        # Get the matched IBAN
-        iban_value = iban_match.group()
-
-        # Get the start index of the IBAN match
-        start_index = iban_match.end()
-
-        # Search for the date pattern after the IBAN match
-        # Find all matches of the IBAN pattern in the text
-        date_matches = re.findall(date_pattern, comment[start_index:])
-        num_date_matches = len(date_matches)
-        last_date_match = date_matches[-1]
-        # Find the IBAN-like match
-        date_match = re.search(last_date_match, comment[start_index:])
-
-        #date_match = re.search(date_pattern, comment[start_index:])
-
-        if date_match:
-            # Extract the text between the IBAN and the date
-            text_between = comment[start_index:start_index + date_match.start()].strip()
-            # Combine the IBAN and the text
-            result = f"{iban_value} {text_between}"
-            return result
-        else:
-            return comment[iban_match.start():]
-    else:
-        return ""
-
-    '''
 
 
 # Load the .env file
@@ -262,8 +203,6 @@ input_folder_path = os.getenv('PDF_FILES_PATH')
 language = os.getenv('LANGUAGE')
 if language != "French":
     print('Warning: nltk packages are in French. It can be easily changed though, lookup and change parameter "language=french"')
-
-#input_folder_path = 'E:/LaptopBackUp/Administrative/Banques/Fortis/Commun/2021/test/'
 
 custom_text_remove = ['Les dépôts sont éligibles pour la protection. Plus d’informations via votre contact habituel ou sur bnpparibasfortis.be/garantiedepots',
                       'Tél. 02 762 20 00 - Card Stop: 078 170 170 - www.bnpparibasfortis.be3/3']
@@ -306,20 +245,23 @@ for pdf_file in pdf_folder.glob('*.pdf'):
 
     text = pdf_text
     # Extract client information
-    client_name = re.search(r'M M ALLARD - ROLAND', text).group()
-    client_number = re.search(r'N° client : (\d+ \d+)', text).group(1)
-    iban = re.search(r'([A-Z]{2}\d{2} \d{4} \d{4} \d{4})', text).group(1)
-    bic = re.search(r'BIC (\w+)', text).group(1)
+    try:
+        client_name = re.search(r'M M ALLARD - ROLAND', text).group()
+        client_number = re.search(r'N° client : (\d+ \d+)', text).group(1)
+        iban = re.search(r'([A-Z]{2}\d{2} \d{4} \d{4} \d{4})', text).group(1)
+        bic = re.search(r'BIC (\w+)', text).group(1)
 
-    # Extract current and previous balance
-    try:
-        current_balance = re.search(r'Solde actuel au (\d{2}-\d{2}-\d{4}) (\d+,\d{2})', text).groups()
+        # Extract current and previous balance
+        try:
+            current_balance = re.search(r'Solde actuel au (\d{2}-\d{2}-\d{4}) (\d+,\d{2})', text).groups()
+        except:
+            current_balance = re.search(r'Solde actuel au (\d{2}-\d{2}-\d{4}) \d{1,3}(\.\d{3})*,\d{2}', text).groups()
+        try:
+            previous_balance = re.search(r'Solde précédent au (\d{2}-\d{2}-\d{4}) (\d+,\d{2})', text).groups()
+        except:
+            previous_balance = re.search(r'Solde précédent au (\d{2}-\d{2}-\d{4}) \d{1,3}(\.\d{3})*,\d{2}', text).groups()
     except:
-        current_balance = re.search(r'Solde actuel au (\d{2}-\d{2}-\d{4}) \d{1,3}(\.\d{3})*,\d{2}', text).groups()
-    try:
-        previous_balance = re.search(r'Solde précédent au (\d{2}-\d{2}-\d{4}) (\d+,\d{2})', text).groups()
-    except:
-        previous_balance = re.search(r'Solde précédent au (\d{2}-\d{2}-\d{4}) \d{1,3}(\.\d{3})*,\d{2}', text).groups()
+        print("Could't retrieve client's information ")
     # Define the transaction pattern
     transaction_pattern = r'(\d{2}-\d{2}-\d{4})\s+(\d{4})\s+'
 
@@ -349,25 +291,6 @@ for pdf_file in pdf_folder.glob('*.pdf'):
                    r"Tél\. \d{2} \d{3} \d{2} \d{2} - Card Stop: \d{3} \d{3} \d{3} - www\.bnpparibasfortis\.be\d+/\d+"]
         for pattern in regex_pattern:
             remaining_text = re.sub(pattern, '', remaining_text)
-        #'r\'Tél\\. 02 762 20 00 - Card Stop: 078 170 170 - www\\.bnpparibasfortis\\.be\\d+/\\d+\''
-        # Replace the pattern with an empty string
-        #for line in custom_regex_remove:
-            # Use repr() to get the escaped representation, but strip the outer quotes
-            #raw_like_string = repr(line)[1:-1]
-
-            # Replace double backslashes (\\) with single backslashes (\) dynamically
-            #raw_like_string = raw_like_string.replace('\\\\', '\\')
-
-            # Prefix with r' and suffix with a single quote to make it look like a raw string
-            #final_string = f"r'{raw_like_string}'"
-            #remaining_text = remaining_text.replace(final_string, "").strip()
-            # Remove the double backslashes
-            #line = line.replace('\\\\', '\\')
-            # Remove the 'r\' at the start if present
-            #if line.startswith("r'"):
-            #    line = line[2:]
-
-
 
         # date + id
         transaction_pattern = r'(\d{2}-\d{2}-\d{4})\s+(\d{4})\s+'
@@ -481,11 +404,14 @@ output_file_path = os.path.join(input_folder_path, 'transactions_enriched.csv')
 transaction_df.to_csv(output_file_path, index=False)
 if transaction_df.empty:
     print("No transaction found")
+
+# Export the 'comments' column to a text file
+transaction_df['comment'].to_csv(os.path.join(input_folder_path, 'comments_GPT.txt'), index=False, header=False)
+
+
 # Apply the categorization function to the DataFrame
 categories_exact_match, categories_fuzzy = get_categories()
-transaction_df['exact keyword'] = ""
-transaction_df['regex exact keyword'] = ""
-transaction_df['fuzzy keyword'] = ""
+
 transaction_df = categorize_transaction(transaction_df, categories_exact_match=categories_exact_match, categories_fuzzy=categories_fuzzy)
 
 output_file_path = os.path.join(input_folder_path, 'transactions_enriched_categorized.csv')
