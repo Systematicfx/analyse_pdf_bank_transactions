@@ -127,4 +127,18 @@ Additional fields:
    - **Category**: first category found
    - **SubCategory**: next categories found
 
+4. **Analyse the results**:
 
+Open the xls files (I suggest to open xls split by negative and positive amounts separately),
+select all data and insert a pivot table:
+
+![img_1.png](img_1.png)
+
+Ii suggest to use:
+- as rows: `Category` and `transaction type`
+- as values: `Amount`
+
+![img_2.png](img_2.png)
+
+You can perform deeper analysis using other fields available in the pivot table.
+You drilldown on specific transactions and enrich the classification dictionnary if transactions were misclassified.
