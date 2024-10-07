@@ -27,7 +27,7 @@ Let's be clear: the code is not polished or optimized. It was developed quickly 
 - download python Pycharm IDE `PyCharm Community Edition` from [jetbrains official website](https://www.jetbrains.com/pycharm/download/?section=windows)
 - clone the repo using your Pycharm terminal: `git clone https://github.com/Systematicfx/analyse_pdf_bank_transactions.git`
 - double click on `setup.bat` file in the folder where the project is located to install the env and all dependencies
-  
+
 ## Procedure
 
 - The full following procedure could be fully automated using an OpenAi api.
@@ -47,10 +47,11 @@ Let's be clear: the code is not polished or optimized. It was developed quickly 
      ```
 
 2. **Run the appropriate script for your bank**:
-   - For Axa: `pdf_bank_transactions_axa.py`
-   - For Crelan: `pdf_bank_transactions_crelan.py`
-   - For Fortis: `pdf_bank_transactions_fortis.py`
-   - For Belfius: `pdf_bank_transactions_belfius.py`
+   In your terminal, in your project, you can run:
+   - For Axa: `python pdf_bank_transactions_axa.py`
+   - For Crelan: `python pdf_bank_transactions_crelan.py`
+   - For Fortis: `python pdf_bank_transactions_fortis.py`
+   - For Belfius: `python pdf_bank_transactions_belfius.py`
 
    Example:
    ```bash
