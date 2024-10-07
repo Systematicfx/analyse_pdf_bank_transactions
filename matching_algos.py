@@ -181,6 +181,7 @@ def get_categories():
         }
 
 
+
     categories_exact_match = {
             'Groceries': [
                 "AD DELHAIZE FORE VORST",
@@ -201,12 +202,15 @@ def get_categories():
             'Utilities': [
                 "EDF Luminus SA",
                 "IECBW",
-                "SODEXO PASS BELGIUM SA",
                 "Brutele sc",
                 "Proximus",
+                'RESEAU D\'ENERGIES DE WAVRE SC DP',
+                "REW",
+                'EDF LUMINUS NV', 'Orange SA', 'SPB', 'INBW', 'Proximus New', 'Luminus'
             ],
             'Rent': [
-                "AXA Belgium"
+                "loyer",
+                "louer"
             ],
             'Dining': [
                 "FONFON",
@@ -229,7 +233,8 @@ def get_categories():
                 "Dumont Boulanger",
                 "Blond Saint-Gi",
                 "Noa Wyszegrodzki",
-                "Au Chateau Magiq"
+                "Au Chateau Magiq",
+                'MAXICOFFEE GC'
             ],
             'Entertainment': [
                 "CINESCOPE BVBA",
@@ -243,19 +248,22 @@ def get_categories():
                 "CESAM Nature",
                 "BTS WAVRE"
                 "Jard",
-                "Les Sables"
+                "Les Sables",
+                "LES IDEES BLEUES"
             ],
             'Healthcare': [
                 "CLINIQUE ST-PIER",
                 "Clin St Pierre",
                 "Multipharm"
             ],
-            'Transport': [
+            'Gas Station': [
                 "LUKOIL 120 WAVRE",
                 "Q8 109060 WAVRE",
                 "ESSO G&V WAVRE",
-                "DYNEFF BROUZILS",
                 "TOTAL NB000556 W WAVRE",
+            ],
+            'Transport': [
+                "DYNEFF BROUZILS",
                 "Suntransfers"
             ],
             'Shopping': [
@@ -270,13 +278,18 @@ def get_categories():
             'Miscellaneous': [
                 "PHOTOMATIQUE",
                 "Parking Brussels",
-                "Beobank Interest",
-                "Services Taxes - Please des Carmes",
-                "Beobank - carte Visa New",
-                "Services Taxes - Please des Carmes",
                 "PARKING LLN",
                 "Indigo Infra Bel",
-                "LES IDEES BLEUES"
+            ],
+            'Loan, Insurance, fees': [
+                "Beobank Interest",
+                "Beobank - carte Visa New",
+                'CREDIT AGRICOLE ASSURANCE HABITATION',
+                "Beobank Interest",
+                "Beobank - carte Visa New",
+                "Services Taxes - Please des Carmes",
+                "Services Taxes - Please des Carmes",
+                'Notaire Benjamin BARATHON', 'Crelan Basic'
             ],
             'Materials': [
                 "BRICO",
@@ -292,13 +305,14 @@ def get_categories():
             'Lastname Firstname': [
                 "Lastname Firstname",
                 "Firstname Lastname",
-                "Services Taxes - Please des Carmes",
-                "Beobank - carte Visa New"
+                "SODEXO PASS BELGIUM SA",
+                'BNP Paribas B Pension Sustainable Growth'
             ],
         }
 
+
     # Aggregate dictionaries
-    categories_exact_match = aggregate_dictionaries(categories_exact_match, categories_axa1, categories_axa2, categories_axa3)
+    categories_exact_match = aggregate_dictionaries(categories_exact_match)
 
     # Aggregate dictionaries
     categories_fuzzy = aggregate_dictionaries(categories_belgium, categories_france)

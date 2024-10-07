@@ -22,12 +22,11 @@ Let's be clear: the code is not polished or optimized. It was developed quickly 
 - Belfius
 
 ## Installation
-    
-- clone the repo
-- Install **_requirements.txt_**:
-  in your env `pip install -r /path/to/requirements.txt`
-- install ntlk corpora:
-  `python -m nltk.downloader all` (https://www.nltk.org/data.html)
+
+- download python 3.8.9 `Windows installer (64-bit)` from [python official website](https://www.python.org/downloads/release/python-389/)
+- download python Pycharm IDE `PyCharm Community Edition` from [jetbrains official website](https://www.jetbrains.com/pycharm/download/?section=windows)
+- clone the repo using your Pycharm terminal: `git clone https://github.com/Systematicfx/analyse_pdf_bank_transactions.git`
+- double click on `setup.bat` file in the folder where the project is located to install the env and all dependencies
   
 ## Procedure
 
