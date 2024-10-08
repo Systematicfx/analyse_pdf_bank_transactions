@@ -23,12 +23,24 @@ Let's be clear: the code is not polished or optimized. It was developed quickly 
 
 ## Installation
 
-- download python 3.8.9 `Windows installer (64-bit)` from [python official website](https://www.python.org/downloads/release/python-389/)
-- download python Pycharm IDE `PyCharm Community Edition` from [jetbrains official website](https://www.jetbrains.com/pycharm/download/?section=windows)
-- clone the repo using your Pycharm terminal: `git clone https://github.com/Systematicfx/analyse_pdf_bank_transactions.git`
-- double click on `setup.bat` file in the folder where the project is located to install the env and all dependencies
+- Download python 3.8.9 `Windows installer (64-bit)` from [python official website](https://www.python.org/downloads/release/python-389/)
+  Make sure to tick the checkbox that says **Add Python to PATH**
+- Download python Pycharm IDE `PyCharm Community Edition` from [jetbrains official website](https://www.jetbrains.com/pycharm/download/?section=windows)
+- Open PyCharm: Start PyCharm and open your project.
+- Open the Pycharm Terminal: You can find the terminal at the bottom of the PyCharm window. Click on the Terminal tab to open it.
+    - Navigate to Your Project Directory using the cd command in your terminal: `cd path\to\your\project`
+    - Clone the repo using your Pycharm terminal: `git clone https://github.com/Systematicfx/analyse_pdf_bank_transactions.git`
+    - Use the following command to create a new virtual environment: `python -m venv venv`
+    - Activate the Virtual Environment: `venv\Scripts\activate`
+    - Install Packages: `pip install -r requirements.txt`
+    - Donwload nltk corpora: `python -m nltk.downloader all`
+    
+### Quick Installation
 
-## Procedure
+A `setup.bat` and `setup.py` for quick installation
+
+    
+## Usage Procedure
 
 - The full following procedure could be fully automated using an OpenAi api.
 
