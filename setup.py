@@ -209,7 +209,7 @@ setup(
         'yacs==0.1.8',
         'zipp==3.17.0'
     ],
-    python_requires='==3.8',  # Specify Python version 3.8
+    python_requires='>=3.8,<3.9',  # Specify Python version 3.8
     cmdclass={
         'install': PostInstallCommand,
     },
